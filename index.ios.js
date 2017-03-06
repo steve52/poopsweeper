@@ -5,7 +5,7 @@ import {
   Text,
   View,
   Image,
-  TouchableNativeFeedback,
+  TouchableHighlight,
   Animated,
   Button,
   ScrollView
@@ -44,7 +44,7 @@ class Cell extends Component {
     if (this.state.isHidden) display = this.state.isFlag ? '⚑' : '';
     else display = this.state.isPoop ? '\uD83D\uDCA9' : (this.state.count || '');
     return (
-      <TouchableNativeFeedback
+      <TouchableHighlight
         onPress={this.onPress.bind(this)}
         onLongPress={this.onLongPress.bind(this)} >
         <Animated.View style={[styles.cell, {
@@ -53,7 +53,7 @@ class Cell extends Component {
         }]} >
           <Text style={styles.icon}>{display}</Text>
         </Animated.View>
-      </TouchableNativeFeedback>
+      </TouchableHighlight>
     );
   }
 }
