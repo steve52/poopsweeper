@@ -35,7 +35,7 @@ export default class Cell extends Component {
     };
   }
 
-  onPress() {
+  onPress = () => {
     if (this.props.getStatus() !== 'loser') {
       this.state.pressSpring.setValue(1.2);
       Animated.spring(this.state.pressSpring, { toValue: 1 }).start();
@@ -44,7 +44,7 @@ export default class Cell extends Component {
     }
   }
 
-  onLongPress() {
+  onLongPress = () => {
     if (this.state.isHidden)
       this.setState({ isFlag: !this.state.isFlag });
     this.state.pressSpring.setValue(1.1);
@@ -59,8 +59,8 @@ export default class Cell extends Component {
     if (Platform.OS === 'android') {
       return (
         <TouchableNativeFeedback
-          onPress={this.onPress.bind(this)}
-          onLongPress={this.onLongPress.bind(this)}
+          onPress={this.onPress}
+          onLongPress={this.onLongPress}
         >
           <Animated.View style={[styles.cell, {
             backgroundColor: this.state.isHidden ? 'steelblue' : 'lightsteelblue',
@@ -75,8 +75,8 @@ export default class Cell extends Component {
 
     return (
       <TouchableHighlight
-        onPress={this.onPress.bind(this)}
-        onLongPress={this.onLongPress.bind(this)}
+        onPress={this.onPress}
+        onLongPress={this.onLongPress}
       >
         <Animated.View style={[styles.cell, {
           backgroundColor: this.state.isHidden ? 'steelblue' : 'lightsteelblue',

@@ -66,15 +66,19 @@ export default class Poopsweeper extends Component {
       loser: '😭',
     };
   }
-  setStatus(status) {
+
+  setStatus = (status) => {
     this.setState({ status });
   }
-  getStatus() {
+
+  getStatus = () => {
     return this.state.status;
   }
+
   getStatusEmoji() {
     return this.statusEnum[this.state.status];
   }
+
   render() {
     return (
       <View style={styles.container}>
@@ -87,8 +91,8 @@ export default class Poopsweeper extends Component {
             key={this.state.key}
             size={9}
             totalPoops={9}
-            setStatus={this.setStatus.bind(this)}
-            getStatus={this.getStatus.bind(this)}
+            setStatus={this.setStatus}
+            getStatus={this.getStatus}
           />
         </ScrollView>
         <View style={styles.statusBar}>

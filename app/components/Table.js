@@ -25,14 +25,16 @@ export default class Table extends Component {
         ref={`row-${i}`}
         size={this.props.size}
         row={i}
-        revealCells={this.revealCells.bind(this)}
+        revealCells={this.revealCells}
         getStatus={this.props.getStatus}
       />);
   }
+
   componentDidMount() {
     this.setupPoops(this.props.totalPoops);
     this.setupClues();
   }
+
   setupPoops(total) {
     if (total) {
       const sizeSq = this.props.size * this.props.size;
@@ -48,6 +50,7 @@ export default class Table extends Component {
       } else this.setupPoops(total);
     }
   }
+
   setupClues() {
     for (let i = 0; i < this.props.size; i++) {
       for (let j = 0; j < this.props.size; j++) {
@@ -56,6 +59,7 @@ export default class Table extends Component {
       }
     }
   }
+
   getBorderPoop(x, y) {
     const ups = {
       upleft: this.poops.filter(p => p.x === x - 1 && p.y === y - 1),
@@ -84,9 +88,11 @@ export default class Table extends Component {
       .map(cell => cell[0]);
     return states;
   }
+
   setCellState(x, y, state, callback) {
     this.refs[`row-${y}`].setColState(x, state, callback);
   }
+
   getCellState(x, y) {
     if ((x < 0 || x >= this.props.size || y < 0 || y >= this.props.size)
       || Number.isNaN(x)
@@ -94,16 +100,19 @@ export default class Table extends Component {
       return null;
     return this.refs[`row-${y}`].getColState(x);
   }
+
   getHiddenTotalByRow(row) {
     return this.refs[`row-${row}`].getHiddenTotal();
   }
+
   getHiddenTotal() {
     let sum = 0;
     for (let i = 0; i < this.props.size; i++)
       sum += this.refs[`row-${i}`].getHiddenTotal();
     return sum;
   }
-  revealCells(_x, _y) {
+
+  revealCells = (_x, _y) => {
     const loop = (x, y) => {
       const cell = this.getCellState(x, y);
       const borderCells = [
@@ -142,11 +151,13 @@ export default class Table extends Component {
       }
     }));
   }
+
   revealAll() {
     for (let i = 0; i < this.props.size; i++)
       for (let j = 0; j < this.props.size; j++)
         this.setCellState(j, i, { isHidden: false, isFlag: false });
   }
+
   render() {
     return <View style={styles.table}>{this.rows}</View>;
   }
