@@ -4,6 +4,8 @@ import {
   StyleSheet,
   Text,
   TouchableNativeFeedback,
+  TouchableHighlight,
+  Platform,
 } from 'react-native';
 
 const styles = StyleSheet.create({
@@ -53,8 +55,26 @@ export default class Cell extends Component {
     let display = '';
     if (this.state.isHidden) display = this.state.isFlag ? '⚑' : '';
     else display = this.state.isPoop ? '\uD83D\uDCA9' : (this.state.count || '');
+
+    if (Platform.OS === 'android') {
+      return (
+        <TouchableNativeFeedback
+          onPress={this.onPress.bind(this)}
+          onLongPress={this.onLongPress.bind(this)}
+        >
+          <Animated.View style={[styles.cell, {
+            backgroundColor: this.state.isHidden ? 'steelblue' : 'lightsteelblue',
+            transform: [{ scale: this.state.pressSpring }],
+          }]}
+          >
+            <Text style={styles.icon}>{display}</Text>
+          </Animated.View>
+        </TouchableNativeFeedback>
+      );
+    }
+
     return (
-      <TouchableNativeFeedback
+      <TouchableHighlight
         onPress={this.onPress.bind(this)}
         onLongPress={this.onLongPress.bind(this)}
       >
@@ -65,7 +85,7 @@ export default class Cell extends Component {
         >
           <Text style={styles.icon}>{display}</Text>
         </Animated.View>
-      </TouchableNativeFeedback>
+      </TouchableHighlight>
     );
   }
 }
