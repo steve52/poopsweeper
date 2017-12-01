@@ -6,6 +6,8 @@ module.exports = {
     "curly": "off",
     "no-bitwise": "off",
     "no-plusplus": "off",
-    "react/jsx-filename-extension": "off"
+    "react/jsx-filename-extension": "off",
+    "react/sort-comp": "off",
+    "no-else-return": "off"
   }
 };

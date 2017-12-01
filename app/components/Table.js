@@ -3,14 +3,21 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import _ from 'lodash';
 
-import Row from './Row';
+import Cell from './Cell';
 
 const styles = StyleSheet.create({
   table: {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#eee',
   },
 });
 
@@ -19,45 +26,87 @@ export default class Table extends Component {
     super(props);
     this.rows = [];
     this.poops = []; // local poop cache
-    for (let i = 0; i < this.props.size; i++)
-      this.rows.push(<Row
-        key={i}
-        ref={`row-${i}`}
-        size={this.props.size}
-        row={i}
-        revealCells={this.revealCells}
-        getStatus={this.props.getStatus}
-      />);
+
+    const cells = [];
+
+    for (let y = 0; y < this.props.size; y++) {
+      cells[y] = [];
+      for (let x = 0; x < this.props.size; x++) {
+        cells[y][x] = {
+          isFlag: false,
+          isHidden: true,
+          isPoop: false,
+          count: 0,
+          x,
+          y,
+        };
+      }
+    }
+
+    this.state = {
+      cells,
+    };
   }
 
   componentDidMount() {
     this.setupPoops(this.props.totalPoops);
-    this.setupClues();
+    // this.setupClues();
   }
 
-  setupPoops(total) {
-    if (total) {
+  onPress = (row, col) => {
+    const thisCell = this.state.cells[row][col];
+    if (this.props.getStatus() !== 'loser') {
+      if (thisCell.isHidden && !thisCell.isFlag)
+        this.revealCells(col, row);
+    }
+  }
+
+  onLongPress = (row, col) => {
+    const thisCell = this.state.cells[row][col];
+    if (thisCell.isHidden) {
+      this.setCellState(col, row, { isFlag: !this.state.isFlag });
+    }
+  }
+
+  recursivelyPlacePoops(cells, numPoops) {
+    const newCells = _.cloneDeep(cells);
+    if (numPoops) {
       const sizeSq = this.props.size * this.props.size;
       const index = (Math.random() * sizeSq) | 0;
       const row = index / this.props.size | 0;
       const col = index % this.props.size;
-      const cell = this.getCellState(col, row);
+      const cell = cells[row][col];
       if (!cell.isPoop) {
         this.setCellState(col, row, { isPoop: true });
+        newCells[col][row].isPoop = true;
         this.poops.push({ x: col, y: row });
-        console.log(`poop @ ${col}, ${row}`);
-        this.setupPoops(total - 1);
-      } else this.setupPoops(total);
+        return this.recursivelyPlacePoops(newCells, numPoops - 1);
+      } else {
+        return this.recursivelyPlacePoops(newCells, numPoops);
+      }
+    } else {
+      return cells;
     }
   }
 
+  setupPoops(total) {
+    // const newCells = this.recursivelyPlacePoops(this.state.cells, total);
+    this.poops.push({ x: 1, y: 0 });
+    this.setCellState(0, 1, { isPoop: true });
+    this.setupClues();
+    // this.setState({ cells: newCells }, this.setupClues);
+  }
+
   setupClues() {
+    // const newCells = _.cloneDeep(this.state.cells);
     for (let i = 0; i < this.props.size; i++) {
       for (let j = 0; j < this.props.size; j++) {
         const count = this.getBorderPoop(j, i).length;
-        this.setCellState(j, i, { count });
+        this.setCellState(i, j, { count });
+        // newCells[j][i].count = count;
       }
     }
+    // this.setState({ cells: newCells });
   }
 
   getBorderPoop(x, y) {
@@ -89,28 +138,62 @@ export default class Table extends Component {
     return states;
   }
 
-  setCellState(x, y, state, callback) {
-    this.refs[`row-${y}`].setColState(x, state, callback);
+  setCellState(col, row, state, callback) {
+    this.setState((prevState) => {
+      const newCells = _.cloneDeep(prevState.cells);
+      const newState = Object.assign({}, prevState.cells[row][col], state);
+      newCells[row][col] = newState;
+      return { cells: newCells };
+    }, callback);
   }
 
-  getCellState(x, y) {
-    if ((x < 0 || x >= this.props.size || y < 0 || y >= this.props.size)
-      || Number.isNaN(x)
-      || Number.isNaN(y))
+  getCellState(col, row) {
+    if ((col < 0 || col >= this.props.size || row < 0 || row >= this.props.size)
+      || Number.isNaN(col)
+      || Number.isNaN(row))
       return null;
-    return this.refs[`row-${y}`].getColState(x);
-  }
-
-  getHiddenTotalByRow(row) {
-    return this.refs[`row-${row}`].getHiddenTotal();
+    return this.state.cells[row][col];
   }
 
   getHiddenTotal() {
     let sum = 0;
-    for (let i = 0; i < this.props.size; i++)
-      sum += this.refs[`row-${i}`].getHiddenTotal();
+    for (let i = 0; i < this.props.size; i++) {
+      for (let j = 0; j < this.props.size; j++) {
+        sum += this.getCellState(i, j).isHidden | 0;
+      }
+    }
     return sum;
   }
+
+  // getBorderCells(x, y) {
+  //   return [
+  //     this.getCellState(x - 1, y - 1),
+  //     this.getCellState(x, y - 1),
+  //     this.getCellState(x + 1, y - 1),
+  //     this.getCellState(x - 1, y),
+  //     this.getCellState(x + 1, y),
+  //     this.getCellState(x - 1, y + 1),
+  //     this.getCellState(x, y + 1),
+  //     this.getCellState(x + 1, y + 1),
+  //   ].filter(c => c !== null && c.isHidden);
+  // }
+
+  // revealCell = (x, y) => {
+  //   const cell = this.getCellState(x, y);
+  //   if (cell.isPoop) {
+  //     this.props.setStatus('loser');
+  //   } else if (!cell.isFlag && cell.isHidden) {
+  //     this.setCellState(x, y, { isHidden: false }, () => {
+  //       if (!cell.count) {
+  //         const borderCells = this.getBorderCells(x, y);
+  //         borderCells.forEach((c) => {
+  //           this.revealCell(c.x, c.y);
+  //         });
+  //       }
+  //     });
+  //   }
+  // }
+
 
   revealCells = (_x, _y) => {
     const loop = (x, y) => {
@@ -127,6 +210,7 @@ export default class Table extends Component {
       ].filter(c => c !== null && !this.renderQueue.filter(p => p.x === c.x && p.y === c.y).length);
 
       if (!cell.isFlag && cell.isHidden) {
+        console.log('add to renderQueue', x, y);
         this.renderQueue.push({ x, y });
         if (cell.isPoop) {
           this.renderQueue = [{ x, y }];
@@ -134,22 +218,28 @@ export default class Table extends Component {
           return;
         }
         if (!cell.count)
-          borderCells.forEach(c => loop(c.x, c.y));
+          borderCells.forEach((c) => {
+            loop(c.x, c.y);
+          });
       }
     };
 
     this.renderQueue = [];
     this.props.setStatus('nervous');
     loop(_x, _y);
-    this.renderQueue.forEach(p => this.setCellState(p.x, p.y, { isHidden: false }, () => {
-      if (this.props.getStatus() !== 'loser') {
-        const hiddenTotal = this.getHiddenTotal();
-        if (hiddenTotal === this.props.totalPoops) {
-          this.revealAll();
-          setTimeout(() => this.props.setStatus('winner'), 250);
-        } else setTimeout(() => this.props.setStatus('player'), 200);
-      }
-    }));
+    console.log('renderQueue', this.renderQueue);
+
+    this.renderQueue.forEach((c) => {
+      this.setCellState(c.x, c.y, { isHidden: false }, () => {
+        if (this.props.getStatus() !== 'loser') {
+          const hiddenTotal = this.getHiddenTotal();
+          if (hiddenTotal === this.props.totalPoops) {
+            this.revealAll();
+            setTimeout(() => this.props.setStatus('winner'), 250);
+          } else setTimeout(() => this.props.setStatus('player'), 200);
+        }
+      });
+    });
   }
 
   revealAll() {
@@ -159,7 +249,26 @@ export default class Table extends Component {
   }
 
   render() {
-    return <View style={styles.table}>{this.rows}</View>;
+    const rowViews = [];
+    for (let i = 0; i < this.props.size; i++) {
+      const cellViews = [];
+      for (let j = 0; j < this.props.size; j++) {
+        // console.log('this.state.cells', this.state.cells[i][j])
+        cellViews.push(<Cell
+          key={j}
+          row={i}
+          col={j}
+          count={this.state.cells[i][j].count}
+          isPoop={this.state.cells[i][j].isPoop}
+          isHidden={this.state.cells[i][j].isHidden}
+          isFlag={this.state.cells[i][j].isFlag}
+          onPress={this.onPress}
+          onLongPress={this.onLongPress}
+        />);
+      }
+      rowViews.push(<View style={styles.row} key={i}>{cellViews}</View>);
+    }
+    return <View style={styles.table}>{rowViews}</View>;
   }
 }
 

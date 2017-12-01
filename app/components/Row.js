@@ -25,8 +25,10 @@ export default class Row extends Component {
         ref={`cell-${i}`}
         row={this.props.row}
         col={i}
-        revealCells={this.props.revealCells}
-        getStatus={this.props.getStatus}
+        onPress={this.props.onPress}
+        onLongPress={this.props.onLongPress}
+        cells={this.props.cells}
+        cell={this.props.cells[this.props.row][i]}
       />);
   }
 
@@ -36,13 +38,6 @@ export default class Row extends Component {
 
   getColState(col) {
     return this.refs[`cell-${col}`].state;
-  }
-
-  getHiddenTotal() {
-    let sum = 0;
-    for (let i = 0; i < this.props.size; i++)
-      sum += this.getColState(i).isHidden | 0;
-    return sum;
   }
 
   render() {
@@ -55,8 +50,9 @@ export default class Row extends Component {
 }
 
 Row.propTypes = {
-  revealCells: PropTypes.func.isRequired,
   size: PropTypes.number.isRequired,
   row: PropTypes.number.isRequired,
-  getStatus: PropTypes.func.isRequired,
+  cells: PropTypes.arrayOf(PropTypes.array).isRequired,
+  onPress: PropTypes.func.isRequired,
+  onLongPress: PropTypes.func.isRequired,
 };

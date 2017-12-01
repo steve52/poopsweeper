@@ -22,39 +22,18 @@ const styles = StyleSheet.create({
 });
 
 export default class Cell extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      count: this.props.count,
-      pressSpring: new Animated.Value(1),
-      x: this.props.col,
-      y: this.props.row,
-      isPoop: false,
-      isFlag: false,
-      isHidden: true,
-    };
-  }
-
   onPress = () => {
-    if (this.props.getStatus() !== 'loser') {
-      this.state.pressSpring.setValue(1.2);
-      Animated.spring(this.state.pressSpring, { toValue: 1 }).start();
-      if (this.state.isHidden && !this.state.isFlag)
-        this.props.revealCells(this.state.x, this.state.y);
-    }
+    this.props.onPress(this.props.row, this.props.col);
   }
 
   onLongPress = () => {
-    if (this.state.isHidden)
-      this.setState({ isFlag: !this.state.isFlag });
-    this.state.pressSpring.setValue(1.1);
-    Animated.spring(this.state.pressSpring, { toValue: 1 }).start();
+    this.props.onLongPress(this.props.row, this.props.col);
   }
 
   render() {
     let display = '';
-    if (this.state.isHidden) display = this.state.isFlag ? '⚑' : '';
-    else display = this.state.isPoop ? '\uD83D\uDCA9' : (this.state.count || '');
+    // if (this.props.isHidden) display = this.props.isFlag ? '⚑' : '';
+    display = this.props.isPoop ? '\uD83D\uDCA9' : (this.props.count || '');
 
     if (Platform.OS === 'android') {
       return (
@@ -63,8 +42,7 @@ export default class Cell extends Component {
           onLongPress={this.onLongPress}
         >
           <Animated.View style={[styles.cell, {
-            backgroundColor: this.state.isHidden ? 'steelblue' : 'lightsteelblue',
-            transform: [{ scale: this.state.pressSpring }],
+            backgroundColor: this.props.isHidden ? 'steelblue' : 'lightsteelblue',
           }]}
           >
             <Text style={styles.icon}>{display}</Text>
@@ -79,8 +57,7 @@ export default class Cell extends Component {
         onLongPress={this.onLongPress}
       >
         <Animated.View style={[styles.cell, {
-          backgroundColor: this.state.isHidden ? 'steelblue' : 'lightsteelblue',
-          transform: [{ scale: this.state.pressSpring }],
+          backgroundColor: this.props.isHidden ? 'steelblue' : 'lightsteelblue',
         }]}
         >
           <Text style={styles.icon}>{display}</Text>
@@ -91,14 +68,13 @@ export default class Cell extends Component {
 }
 
 Cell.propTypes = {
-  revealCells: PropTypes.func.isRequired,
-  count: PropTypes.number,
   col: PropTypes.number.isRequired,
   row: PropTypes.number.isRequired,
-  getStatus: PropTypes.func.isRequired,
-};
-
-Cell.defaultProps = {
-  count: 0,
+  count: PropTypes.number.isRequired,
+  isHidden: PropTypes.bool.isRequired,
+  isFlag: PropTypes.bool.isRequired,
+  isPoop: PropTypes.bool.isRequired,
+  onPress: PropTypes.func.isRequired,
+  onLongPress: PropTypes.func.isRequired,
 };
 
